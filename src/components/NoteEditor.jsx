@@ -1,14 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { mockSaveApi } from "../api/mockApi";
+import useDebounce from "../hooks/useDebounce";
 
 export default function NoteEditor() {
   const [text, setText] = useState("");
   const [lastSavedAt, setLastSavedAt] = useState(null);
 
-  const handleSave = async () => {
-    await mockSaveApi(text);
-    setLastSavedAt(new Date());
-  };
+  const debouncedText = useDebounce(text, 1000);
+
+  useEffect(() => {
+    if (!debouncedText) return;
+
+    mockSaveApi(debouncedText).then(() => setLastSavedAt(new Date()))
+  }, [debouncedText])
 
   return (
     <div className="card">
@@ -27,9 +31,7 @@ export default function NoteEditor() {
             ? `Last saved at ${lastSavedAt.toLocaleTimeString()}`
             : "Not saved yet"}
         </span>
-        <button className="save-btn" onClick={handleSave}>
-          Save
-        </button>
+        
       </div>
     </div>
   );
